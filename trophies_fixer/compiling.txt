@@ -1,0 +1,4 @@
+make -f Makefile_Fix
+mv -f eboot.bin ./sce_sys/
+make clean
+make

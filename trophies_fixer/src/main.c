@@ -12,26 +12,27 @@
 #define printf psvDebugScreenPrintf
 #define AUTORUN_PATH "savedata0:autorun.bin"
 #define SAVEDATA_PATH "savedata0:sce_sys/param.sfo"
+#define TROPHYFIX_PATH "app0:sce_sys/eboot.bin"
 
 void ContinueByKey(int key)
 {
 	SceCtrlData ctrl;
 
-	// press
 	do
 	{
 		sceCtrlReadBufferPositive(0, &ctrl, 1);
 		sceKernelDelayThread(100000);
 	}
-	while(!(ctrl.buttons & key));
+	while(!(ctrl.buttons & key)); // press
 
-	// release
 	do
 	{
 		sceCtrlReadBufferPositive(0, &ctrl, 1);
 		sceKernelDelayThread(100000);
 	}
-	while((ctrl.buttons & key));
+	while((ctrl.buttons & key)); // release
+
+	sceKernelDelayThread(100000);
 }
 
 int psvIoCopy(char*src, char*dst)
@@ -124,10 +125,7 @@ void ReplaceEboot(char title_buf[9])
 		sceIoRename(path_buf, dest_buf);
 
 		sprintf(dest_buf, "ux0:app/%s/eboot.bin", title_buf);
-		if (psvIoCopy("ux0:app/TROPHYFIX/sce_sys/eboot.bin", dest_buf) < 0)
-		{
-			psvIoCopy("ur0:app/TROPHYFIX/sce_sys/eboot.bin", dest_buf);
-		}
+		psvIoCopy(TROPHYFIX_PATH, dest_buf);
 	}
 	else
 	{
@@ -141,10 +139,7 @@ void ReplaceEboot(char title_buf[9])
 			sceIoRename(path_buf, dest_buf);
 
 			sprintf(dest_buf, "ux0:app/%s/eboot.bin", title_buf);
-			if (psvIoCopy("ux0:app/TROPHYFIX/sce_sys/eboot.bin", dest_buf) < 0)
-			{
-				psvIoCopy("ur0:app/TROPHYFIX/sce_sys/eboot.bin", dest_buf);
-			}
+			psvIoCopy(TROPHYFIX_PATH, dest_buf);
 		}
 	}
 }
@@ -212,10 +207,7 @@ void BackupAndPatch(char title_buf[9])
 	sceIoMkdir(path_buf, 0777);
 
 	sprintf(dest_buf, "ux0:patch/%s/eboot.bin", title_buf);
-	if (psvIoCopy("ux0:app/TROPHYFIX/sce_sys/eboot.bin", dest_buf) < 0)
-	{
-		psvIoCopy("ur0:app/TROPHYFIX/sce_sys/eboot.bin", dest_buf);
-	}
+	psvIoCopy(TROPHYFIX_PATH, dest_buf);
 
 	sprintf(path_buf, "ux0:app/%s/sce_sys/param.sfo", title_buf);
 	sprintf(dest_buf, "ux0:patch/%s/sce_sys/param.sfo", title_buf);
@@ -300,33 +292,38 @@ void run()
 					printf("%s\n", title_buf);
 					sceIoClose(fd);
 
-					if (aid_key != aid_sfo)
+					if (aid_sfo != 0)
 					{
-						if (CheckForEncryption(title_buf) == 1)
+						if (aid_key != aid_sfo)
 						{
-							BackupAndPatch(title_buf);
+							if (CheckForEncryption(title_buf) == 1)
+							{
+								BackupAndPatch(title_buf);
 
-							fd = sceIoOpen(AUTORUN_PATH, SCE_O_WRONLY | SCE_O_CREAT, 0777);
-							sceIoWrite(fd, title_buf, 0x09);
-							sceIoClose(fd);
+								fd = sceIoOpen(AUTORUN_PATH, SCE_O_WRONLY | SCE_O_CREAT, 0777);
+								sceIoWrite(fd, title_buf, 0x09);
+								sceIoClose(fd);
 
-							sprintf(path_buf, "psgm:play?titleid=%s", title_buf);
-							sceAppMgrLaunchAppByUri(0xFFFFF, path_buf);
-							sceKernelDelayThread(100000);
-							sceKernelExitProcess(0);
-						}
-						else
-						{
-							ReplaceEboot(title_buf);
+								sprintf(path_buf, "psgm:play?titleid=%s", title_buf);
+								sceKernelDelayThread(250000);
+								sceAppMgrLaunchAppByUri(0xFFFFF, path_buf);
+								sceKernelDelayThread(250000);
+								sceKernelExitProcess(0);
+							}
+							else
+							{
+								ReplaceEboot(title_buf);
 
-							fd = sceIoOpen(AUTORUN_PATH, SCE_O_WRONLY | SCE_O_CREAT, 0777);
-							sceIoWrite(fd, title_buf, 0x09);
-							sceIoClose(fd);
+								fd = sceIoOpen(AUTORUN_PATH, SCE_O_WRONLY | SCE_O_CREAT, 0777);
+								sceIoWrite(fd, title_buf, 0x09);
+								sceIoClose(fd);
 
-							sprintf(path_buf, "psgm:play?titleid=%s", title_buf);
-							sceAppMgrLaunchAppByUri(0xFFFFF, path_buf);
-							sceKernelDelayThread(100000);
-							sceKernelExitProcess(0);
+								sprintf(path_buf, "psgm:play?titleid=%s", title_buf);
+								sceKernelDelayThread(250000);
+								sceAppMgrLaunchAppByUri(0xFFFFF, path_buf);
+								sceKernelDelayThread(250000);
+								sceKernelExitProcess(0);
+							}
 						}
 					}
 				}
@@ -420,8 +417,9 @@ int main(int argc, char *argv[])
 		}
 		else if (ctrl.buttons == SCE_CTRL_TRIANGLE)
 		{
+			sceKernelDelayThread(250000);
 			sceAppMgrLaunchAppByUri(0xFFFFF, "pstc:");
-			sceKernelDelayThread(100000);
+			sceKernelDelayThread(250000);
 			sceKernelExitProcess(0);
 			break; // ???
 		}

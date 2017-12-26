@@ -21,8 +21,9 @@ int main(int argc, char *argv[])
 	}
 	sceIoClose(fd);
 
+	sceKernelDelayThread(250000);
 	sceAppMgrLaunchAppByUri(0xFFFFF, "psgm:play?titleid=TROPHYFIX");
-	sceKernelDelayThread(100000);
+	sceKernelDelayThread(250000);
 	sceKernelExitProcess(0);
 
 	return 0;
