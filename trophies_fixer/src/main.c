@@ -14,6 +14,21 @@
 #define SAVEDATA_PATH "savedata0:sce_sys/param.sfo"
 #define TROPHYFIX_PATH "app0:sce_sys/eboot.bin"
 
+int is365(void)
+{
+	SceUID fd;
+	fd = sceIoOpen("vs0:tai/henkaku.skprx", SCE_O_RDONLY, 0777);
+	if (fd < 0)
+	{
+		return 0;
+	}
+	else
+	{
+		sceIoClose(fd);
+		return 1;
+	}
+}
+
 void ContinueByKey(int key)
 {
 	SceCtrlData ctrl;
@@ -191,26 +206,49 @@ void BackupAndPatch(char title_buf[9])
 	memset(path_buf, 0, sizeof(path_buf));
 	memset(dest_buf, 0, sizeof(dest_buf));
 
-	sprintf(path_buf, "ux0:patch/%s", title_buf);
+	if (is365)
+		sprintf(path_buf, "ux0:repatch/%s", title_buf);
+	else
+		sprintf(path_buf, "ux0:patch/%s", title_buf);
 	dfd = sceIoDopen(path_buf);
 	if (dfd >= 0)
 	{
 		sceIoDclose(dfd);
-		sprintf(dest_buf, "ux0:patch/%s_", title_buf);
+		if (is365)
+			sprintf(path_buf, "ux0:repatch/%s_", title_buf);
+		else
+			sprintf(path_buf, "ux0:patch/%s_", title_buf);
 		sceIoRename(path_buf, dest_buf);
 	}
 
-	sceIoMkdir("ux0:patch", 0777);
-	sprintf(path_buf, "ux0:patch/%s", title_buf);
-	sceIoMkdir(path_buf, 0777);
-	sprintf(path_buf, "ux0:patch/%s/sce_sys", title_buf);
-	sceIoMkdir(path_buf, 0777);
+	if (is365)
+	{
+		sceIoMkdir("ux0:repatch", 0777);
+		sprintf(path_buf, "ux0:repatch/%s", title_buf);
+		sceIoMkdir(path_buf, 0777);
+		sprintf(path_buf, "ux0:repatch/%s/sce_sys", title_buf);
+		sceIoMkdir(path_buf, 0777);
+	}
+	else
+	{
+		sceIoMkdir("ux0:patch", 0777);
+		sprintf(path_buf, "ux0:patch/%s", title_buf);
+		sceIoMkdir(path_buf, 0777);
+		sprintf(path_buf, "ux0:patch/%s/sce_sys", title_buf);
+		sceIoMkdir(path_buf, 0777);
+	}
 
-	sprintf(dest_buf, "ux0:patch/%s/eboot.bin", title_buf);
+	if (is365)
+		sprintf(dest_buf, "ux0:repatch/%s/eboot.bin", title_buf);
+	else
+		sprintf(dest_buf, "ux0:patch/%s/eboot.bin", title_buf);
 	psvIoCopy(TROPHYFIX_PATH, dest_buf);
 
 	sprintf(path_buf, "ux0:app/%s/sce_sys/param.sfo", title_buf);
-	sprintf(dest_buf, "ux0:patch/%s/sce_sys/param.sfo", title_buf);
+	if (is365)
+		sprintf(dest_buf, "ux0:repatch/%s/sce_sys/param.sfo", title_buf);
+	else
+		sprintf(dest_buf, "ux0:patch/%s/sce_sys/param.sfo", title_buf);
 	if (psvIoCopy(path_buf, dest_buf) < 0)
 	{
 		sprintf(path_buf, "gro0:app/%s/sce_sys/param.sfo", title_buf);
@@ -231,22 +269,42 @@ void RemoveAndRestore(char title_buf[9])
 	memset(path_buf, 0, sizeof(path_buf));
 	memset(dest_buf, 0, sizeof(dest_buf));
 
-	sprintf(path_buf, "ux0:patch/%s/sce_sys/param.sfo", title_buf);
-	sceIoRemove(path_buf);
-	sprintf(path_buf, "ux0:patch/%s/eboot.bin", title_buf);
-	sceIoRemove(path_buf);
+	if (is365)
+	{
+		sprintf(path_buf, "ux0:repatch/%s/sce_sys/param.sfo", title_buf);
+		sceIoRemove(path_buf);
+		sprintf(path_buf, "ux0:repatch/%s/eboot.bin", title_buf);
+		sceIoRemove(path_buf);
 
-	sprintf(path_buf, "ux0:patch/%s/sce_sys", title_buf);
-	sceIoRmdir(path_buf);
-	sprintf(path_buf, "ux0:patch/%s", title_buf);
-	sceIoRmdir(path_buf);
+		sprintf(path_buf, "ux0:repatch/%s/sce_sys", title_buf);
+		sceIoRmdir(path_buf);
+		sprintf(path_buf, "ux0:repatch/%s", title_buf);
+		sceIoRmdir(path_buf);
 
-	sprintf(path_buf, "ux0:patch/%s_", title_buf);
+		sprintf(path_buf, "ux0:repatch/%s_", title_buf);
+	}
+	else
+	{
+		sprintf(path_buf, "ux0:patch/%s/sce_sys/param.sfo", title_buf);
+		sceIoRemove(path_buf);
+		sprintf(path_buf, "ux0:patch/%s/eboot.bin", title_buf);
+		sceIoRemove(path_buf);
+
+		sprintf(path_buf, "ux0:patch/%s/sce_sys", title_buf);
+		sceIoRmdir(path_buf);
+		sprintf(path_buf, "ux0:patch/%s", title_buf);
+		sceIoRmdir(path_buf);
+
+		sprintf(path_buf, "ux0:patch/%s_", title_buf);
+	}
 	dfd = sceIoDopen(path_buf);
 	if (dfd >= 0)
 	{
 		sceIoDclose(dfd);
-		sprintf(dest_buf, "ux0:patch/%s", title_buf);
+		if (is365)
+			sprintf(dest_buf, "ux0:repatch/%s", title_buf);
+		else
+			sprintf(dest_buf, "ux0:patch/%s", title_buf);
 		sceIoRename(path_buf, dest_buf);
 	}
 }
@@ -352,7 +410,7 @@ int main(int argc, char *argv[])
 	psvDebugScreenInit();
 	psvDebugScreenClear(0);
 
-	printf("Trophies Fixer v1.0 by Yoti\n\n");
+	printf("Trophies Fixer v1.1 by Yoti\n\n");
 
 	memset(key_buf, 0, sizeof(key_buf));
 	ret = sceRegMgrGetKeyBin("/CONFIG/NP/", "account_id", key_buf, sizeof(key_buf));
