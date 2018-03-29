@@ -17,14 +17,14 @@
 int is365(void)
 {
 	SceUID fd;
-	fd = sceIoOpen("vs0:tai/henkaku.skprx", SCE_O_RDONLY, 0777);
+	fd = sceIoOpen("vs0:tai/henkaku.skprx", SCE_O_RDONLY, 0777); // https://github.com/TheOfficialFloW/update365/blob/master/installer/src/kernel.c#L500
 	if (fd < 0)
 	{
-		return 0;
+		return -1; // 3.60
 	}
 	else
 	{
-		sceIoClose(fd);
+		sceIoClose(fd); // 3.65
 		return 1;
 	}
 }
@@ -410,7 +410,10 @@ int main(int argc, char *argv[])
 	psvDebugScreenInit();
 	psvDebugScreenClear(0);
 
-	printf("Trophies Fixer v1.1 by Yoti\n\n");
+	printf("Trophies Fixer v1.1 by Yoti\n");
+	if (is365)
+		printf("You must use RePatch on 3.65!\n");
+	printf("\n");
 
 	memset(key_buf, 0, sizeof(key_buf));
 	ret = sceRegMgrGetKeyBin("/CONFIG/NP/", "account_id", key_buf, sizeof(key_buf));
