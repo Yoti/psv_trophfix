@@ -14,19 +14,16 @@
 #define SAVEDATA_PATH "savedata0:sce_sys/param.sfo"
 #define TROPHYFIX_PATH "app0:sce_sys/eboot.bin"
 
-int is365(void)
+int is360(void) // sprintf("%s", (is360()) ? "patch" : "rePatch");
 {
-	SceUID fd;
-	fd = sceIoOpen("vs0:tai/henkaku.skprx", SCE_O_RDONLY, 0777); // https://github.com/TheOfficialFloW/update365/blob/master/installer/src/kernel.c#L500
-	if (fd < 0)
-	{
-		return -1; // 3.60
-	}
-	else
-	{
-		sceIoClose(fd); // 3.65
+	SceKernelFwInfo info;
+	info.size = sizeof(SceKernelFwInfo);
+	_vshSblGetSystemSwVersion(&info);
+
+	if (info.version == 0x03600000)
 		return 1;
-	}
+
+	return 0;
 }
 
 void ContinueByKey(int key)
