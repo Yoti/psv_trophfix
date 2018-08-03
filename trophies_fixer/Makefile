@@ -18,7 +18,7 @@ SRC_CPP :=$(call rwildcard, src/, *.cpp)
 OBJ_DIRS := $(addprefix out/, $(dir $(SRC_C:src/%.c=%.o))) $(addprefix out/, $(dir $(SRC_CPP:src/%.cpp=%.o)))
 OBJS := $(addprefix out/, $(SRC_C:src/%.c=%.o)) $(addprefix out/, $(SRC_CPP:src/%.cpp=%.o))
 
-LIBS += -lSceCtrl_stub -lSceDisplay_stub -lSceRegistryMgr_stub -lSceAppMgr_stub
+LIBS += -lSceCtrl_stub -lSceDisplay_stub -lSceRegistryMgr_stub -lSceAppMgr_stub -lSceVshBridge_stub
 
 all: package
 

@@ -3,10 +3,11 @@
 #include <debugScreen.h>
 #include <psp2/ctrl.h>
 #include <psp2/appmgr.h>
+#include <psp2/vshbridge.h>
+#include <psp2/registrymgr.h>
 #include <psp2/io/stat.h>
 #include <psp2/io/fcntl.h>
 #include <psp2/io/dirent.h>
-#include <psp2/registrymgr.h>
 #include <psp2/kernel/processmgr.h>
 
 #define printf psvDebugScreenPrintf
@@ -203,7 +204,7 @@ void BackupAndPatch(char title_buf[9])
 	memset(path_buf, 0, sizeof(path_buf));
 	memset(dest_buf, 0, sizeof(dest_buf));
 
-	if (is365)
+	if (!is360)
 		sprintf(path_buf, "ux0:repatch/%s", title_buf);
 	else
 		sprintf(path_buf, "ux0:patch/%s", title_buf);
@@ -211,14 +212,14 @@ void BackupAndPatch(char title_buf[9])
 	if (dfd >= 0)
 	{
 		sceIoDclose(dfd);
-		if (is365)
+		if (!is360)
 			sprintf(path_buf, "ux0:repatch/%s_", title_buf);
 		else
 			sprintf(path_buf, "ux0:patch/%s_", title_buf);
 		sceIoRename(path_buf, dest_buf);
 	}
 
-	if (is365)
+	if (!is360)
 	{
 		sceIoMkdir("ux0:repatch", 0777);
 		sprintf(path_buf, "ux0:repatch/%s", title_buf);
@@ -235,14 +236,14 @@ void BackupAndPatch(char title_buf[9])
 		sceIoMkdir(path_buf, 0777);
 	}
 
-	if (is365)
+	if (!is360)
 		sprintf(dest_buf, "ux0:repatch/%s/eboot.bin", title_buf);
 	else
 		sprintf(dest_buf, "ux0:patch/%s/eboot.bin", title_buf);
 	psvIoCopy(TROPHYFIX_PATH, dest_buf);
 
 	sprintf(path_buf, "ux0:app/%s/sce_sys/param.sfo", title_buf);
-	if (is365)
+	if (!is360)
 		sprintf(dest_buf, "ux0:repatch/%s/sce_sys/param.sfo", title_buf);
 	else
 		sprintf(dest_buf, "ux0:patch/%s/sce_sys/param.sfo", title_buf);
@@ -266,7 +267,7 @@ void RemoveAndRestore(char title_buf[9])
 	memset(path_buf, 0, sizeof(path_buf));
 	memset(dest_buf, 0, sizeof(dest_buf));
 
-	if (is365)
+	if (!is360)
 	{
 		sprintf(path_buf, "ux0:repatch/%s/sce_sys/param.sfo", title_buf);
 		sceIoRemove(path_buf);
@@ -298,7 +299,7 @@ void RemoveAndRestore(char title_buf[9])
 	if (dfd >= 0)
 	{
 		sceIoDclose(dfd);
-		if (is365)
+		if (!is360)
 			sprintf(dest_buf, "ux0:repatch/%s", title_buf);
 		else
 			sprintf(dest_buf, "ux0:patch/%s", title_buf);
@@ -344,7 +345,7 @@ void run()
 
 					sceIoLseek(fd, 0x51C, SCE_SEEK_SET); // APPLICATION_ID
 					sceIoRead(fd, title_buf, 0x09);
-					printf("%s\n", title_buf);
+					printf("%s (%i016ll)\n", title_buf, aid_sfo);
 					sceIoClose(fd);
 
 					if (aid_sfo != 0)
@@ -407,9 +408,8 @@ int main(int argc, char *argv[])
 	psvDebugScreenInit();
 	psvDebugScreenClear(0);
 
-	printf("Trophies Fixer v1.1 by Yoti\n");
-	if (is365)
-		printf("You must use RePatch on 3.65!\n");
+	printf("Trophies Fixer v1.2 by Yoti\n");
+	printf("Your must %s rePatch for proper operation!\n", (is360()) ? "DISABLE" : "ENABLE");
 	printf("\n");
 
 	memset(key_buf, 0, sizeof(key_buf));
